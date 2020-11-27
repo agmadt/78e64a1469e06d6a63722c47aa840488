@@ -4,8 +4,4 @@ use Phroute\Phroute\RouteCollector;
 
 $router = new RouteCollector();
 
-$router->post('/emails/send', function () {
-    echo json_encode([
-        'message' => 'Route'
-    ]);
-});
+$router->post('/emails/send', ['App\\Controllers\\EmailController', 'send']);
