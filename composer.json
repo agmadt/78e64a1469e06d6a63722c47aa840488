@@ -1,0 +1,13 @@
+{
+    "name": "agam/deotrans",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Agam Adhityo",
+            "email": "adhityoagam@gmail.com"
+        }
+    ],
+    "require": {
+        "phroute/phroute": "^2.1"
+    }
+}
