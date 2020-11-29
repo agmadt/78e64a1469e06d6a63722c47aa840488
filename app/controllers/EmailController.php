@@ -2,10 +2,8 @@
 
 namespace App\Controllers;
 
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-use PHPMailer\PHPMailer\PHPMailer;
-use App\DB;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 
 /**
  * EmailController class
@@ -21,51 +19,39 @@ class EmailController
     {
         $body = json_decode(file_get_contents('php://input'));
 
-        if ($error = $this->validate($body)) {
+        $errorMessage = $this->validate($body);
+        if (!empty($errorMessage)) {
             header('HTTP/1.1 422 Unprocessable Entity');
             echo json_encode([
-                'message' => $error
+                'message' => $errorMessage
             ]);
             return;
         }
 
-        $db = new DB();
-        foreach ($body->emails as $email) {
-            try {
-                $mail = new PHPMailer(true);
-                $mail->SMTPAuth = true;
-                $mail->Host = $_ENV['MAIL_HOST'];
-                $mail->Username = $_ENV['MAIL_USERNAME'];
-                $mail->Password = 'asd';
-                $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION'];
-                $mail->isSMTP();
-                $mail->Port = $_ENV['MAIL_PORT'];
-                $mail->isHTML(true);
-                $mail->setFrom($_ENV['MAIL_FROM'], $_ENV['MAIL_FROM_NAME']);
-                $mail->addAddress($email->to);
-                $mail->Subject = 'Here is the subject';
-                $mail->Body = 'Test message';
-                $mail->send();
+        $connection = new AMQPStreamConnection(
+            $_ENV['RABBIT_HOST'],
+            $_ENV['RABBIT_PORT'],
+            $_ENV['RABBIT_USER'],
+            $_ENV['RABBIT_PASSWORD'],
+            $_ENV['RABBIT_VHOST']
+        );
+        $channel = $connection->channel();
+        $channel->queue_declare('EMAIL', false, true, false, false);
 
-                $db->query('INSERT INTO sent_emails (payload, sent_at) VALUES (:payload, :sent_at)');
-                $db->bind(':payload', json_encode([
+        foreach ($body->emails as $email) {
+            $msg = new AMQPMessage(
+                json_encode([
                     'to' => $email->to,
                     'subject' => $email->subject,
                     'message' => $email->message
-                ]));
-                $db->bind(':sent_at', date('Y-m-d H:i:s'));
-                $db->execute();
-            } catch (Exception $e) {
-                $db->query('INSERT INTO unsent_emails (payload, failed_at) VALUES (:payload, :failed_at)');
-                $db->bind(':payload', json_encode([
-                    'to' => $email->to,
-                    'subject' => $email->subject,
-                    'message' => $email->message
-                ]));
-                $db->bind(':failed_at', date('Y-m-d H:i:s'));
-                $db->execute();
-            }
+                ]),
+                array('delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT)
+            );
+            $channel->basic_publish($msg, '', 'SEND_EMAIL');
         }
+
+        $channel->close();
+        $connection->close();
 
         echo json_encode([
             'message' => 'Emails sent'
@@ -74,10 +60,12 @@ class EmailController
 
     /**
      * Validate function
+     * 
+     * @param $request 
      *
-     * @return mixed
+     * @return string
      */
-    public function validate($request)
+    public function validate($request): string
     {
         if (empty($request->emails) || !isset($request->emails)) {
             return 'Emails cannot be empty';
@@ -105,6 +93,6 @@ class EmailController
             }
         }
 
-        return null;
+        return '';
     }
 }
