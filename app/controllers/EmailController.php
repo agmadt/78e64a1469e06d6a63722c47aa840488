@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use OAuth2\Request;
-use OAuth2\Response;
 use App\Services\OAuth;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Connection\AMQPStreamConnection;

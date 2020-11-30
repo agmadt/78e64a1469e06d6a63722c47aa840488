@@ -4,16 +4,16 @@ namespace App\Controllers;
 
 use App\DB;
 use App\Services\OAuth;
-use OAuth2\Server;
 use OAuth2\Request;
 use OAuth2\Response;
-use OAuth2\Storage\Pdo;
-use OAuth2\Storage\Memory;
-use OAuth2\GrantType\AuthorizationCode;
-use OAuth2\GrantType\ClientCredentials;
 
 class AuthController
 {
+    /**
+     * Used for OAuth2 authorize endpoint
+     *
+     * @return void
+     */
     public function authorize()
     {
         $server = (new OAuth)->init();
@@ -49,6 +49,11 @@ class AuthController
         ]);
     }
 
+    /**
+     * Used for OAuth2 access_token endpoint
+     *
+     * @return void
+     */
     public function accessToken()
     {
         $server = (new OAuth)->init();
@@ -67,6 +72,13 @@ class AuthController
         $server->handleTokenRequest($request)->send();
     }
 
+    /**
+     * Private validation for checking parameters for access_token
+     *
+     * @param Request $request 
+     * 
+     * @return string
+     */
     private function _accessTokenValidation(Request $request): string
     {
         $request = $request->request;
@@ -86,6 +98,13 @@ class AuthController
         return "";
     }
 
+    /**
+     * Private validation for checking parameters for authorize
+     *
+     * @param Request $request 
+     * 
+     * @return string
+     */
     private function _authorizeValidation(Request $request): string
     {
         $request = $request->request;
@@ -101,6 +120,13 @@ class AuthController
         return "";
     }
 
+    /**
+     * To check whether client exist
+     *
+     * @param Request $request 
+     * 
+     * @return void
+     */
     private function _isClientExist(Request $request)
     {
         $request = $request->request;
