@@ -2,8 +2,11 @@
 
 namespace App\Controllers;
 
-use PhpAmqpLib\Connection\AMQPStreamConnection;
+use OAuth2\Request;
+use OAuth2\Response;
+use App\Services\OAuth;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 
 /**
  * EmailController class
@@ -15,8 +18,14 @@ class EmailController
      * 
      * @return void
      */
-    public function send(): void
+    public function send()
     {
+        $server = (new OAuth)->init();
+        $request = Request::createFromGlobals();
+        if (!$server->verifyResourceRequest($request)) {
+            return $server->getResponse()->send();
+        }
+
         $body = json_decode(file_get_contents('php://input'));
 
         $errorMessage = $this->validate($body);
