@@ -1,0 +1,234 @@
+openapi: 3.0.0
+info:
+  title: API Spec
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080'
+paths:
+  /authorize:
+    post:
+      summary: Get authorization code
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authorization_code:
+                    type: string
+                  state:
+                    type: string
+              examples:
+                example:
+                  value:
+                    authorization_code: b4e8d551cd7cc8ed31769d462309ed5c44c935e6
+                    state: 824f1300556d725ca0113cf6fd1a707a
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                example:
+                  value:
+                    message: Authorization failed
+            application/xml:
+              schema:
+                type: object
+                properties: {}
+      operationId: post-auth-login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+              required:
+                - client_id
+                - client_secret
+            examples:
+              example:
+                value:
+                  client_id: agam
+                  client_secret: testpass
+      description: ''
+      security: []
+  /access_token:
+    post:
+      summary: Get access token by providing authorization code
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    minLength: 1
+                  expires_in:
+                    type: number
+                  token_type:
+                    type: string
+                    minLength: 1
+                  scope:
+                    type: string
+                  refresh_token:
+                    type: string
+                    minLength: 1
+              examples:
+                example:
+                  value:
+                    access_token: cc21d1e38e1b5c53b55f0d842fe39fceba701ccc
+                    expires_in: 3600
+                    token_type: Bearer
+                    scope: null
+                    refresh_token: f4be67261bf75490fe8dfbf30eb633aaf8ea6634
+      operationId: post-access_token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                code:
+                  type: string
+              required:
+                - client_id
+                - client_secret
+                - code
+            examples:
+              example:
+                value:
+                  client_id: agam
+                  client_secret: testpass
+                  code: ca741b1b84a80b7e3b1763c2c04803aaf6594fa3
+  /emails/send:
+    post:
+      summary: Send email
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  message:
+                    type: string
+                    minLength: 1
+                required:
+                  - message
+              examples:
+                example:
+                  value:
+                    message: Emails sent
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  error:
+                    type: string
+                    minLength: 1
+                  error_description:
+                    type: string
+                    minLength: 1
+                required:
+                  - error
+                  - error_description
+              examples:
+                example:
+                  value:
+                    error: invalid_token
+                    error_description: The access token provided is invalid
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  message:
+                    type: string
+                    minLength: 1
+                required:
+                  - message
+              examples:
+                example:
+                  value:
+                    message: Emails cannot be empty
+      operationId: post-emails-send
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              properties:
+                emails:
+                  type: array
+                  uniqueItems: true
+                  minItems: 1
+                  items:
+                    required:
+                      - to
+                      - subject
+                      - message
+                    properties:
+                      to:
+                        type: string
+                        minLength: 1
+                      subject:
+                        type: string
+                        minLength: 1
+                      message:
+                        type: string
+                        minLength: 1
+              required:
+                - emails
+            examples:
+              example:
+                value:
+                  emails:
+                    - to: adhityoagam@gmail.com
+                      subject: Sending email thru PHP
+                      message: Wakandaboy
+      parameters: []
+components:
+  securitySchemes:
+    Bearer:
+      type: oauth2
+      flows:
+        authorizationCode:
+          scopes: {}
+          authorizationUrl: /authorize
+          tokenUrl: /access_token
+        clientCredentials:
+          tokenUrl: /access_token
+          refreshUrl: ''
+          scopes: {}
+      description: ''

@@ -93,5 +93,15 @@ services:
       - deophp
     command: ["supervisord", "-c",  "/etc/supervisord.conf"]
 
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger-ui
+    ports:
+      - 8003:8080
+    volumes:
+      - ./openapi.json:/openapi.json
+    environment:
+      SWAGGER_JSON: /openapi.json
+
 volumes:
   dbdata:
