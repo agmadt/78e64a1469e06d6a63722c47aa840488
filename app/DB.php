@@ -26,6 +26,7 @@ class DB
             $this->_dbh = new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
+            echo $e->getMessage();
         }
     }
 

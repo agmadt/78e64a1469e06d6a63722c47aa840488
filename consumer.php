@@ -9,10 +9,16 @@ use App\Services\EmailLog;
 use PHPMailer\PHPMailer\Exception;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
-$connection = new AMQPStreamConnection('moose.rmq.cloudamqp.com', 5672, 'rrdggrsh', 'oOlXObCkwf82z4koKQXKVdCjvOuwCwB4', 'rrdggrsh');
+$connection = new AMQPStreamConnection(
+    $_ENV['RABBIT_HOST'],
+    $_ENV['RABBIT_PORT'],
+    $_ENV['RABBIT_USER'],
+    $_ENV['RABBIT_PASSWORD'],
+    $_ENV['RABBIT_VHOST']
+);
 $channel = $connection->channel();
 
-$channel->queue_declare('EMAIL', false, true, false, false);
+$channel->queue_declare('SEND_EMAIL', false, true, false, false);
 
 echo " [*] Waiting for messages. To exit press CTRL+C\n";
 

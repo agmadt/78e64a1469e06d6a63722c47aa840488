@@ -44,7 +44,7 @@ class EmailController
             $_ENV['RABBIT_VHOST']
         );
         $channel = $connection->channel();
-        $channel->queue_declare('EMAIL', false, true, false, false);
+        $channel->queue_declare('SEND_EMAIL', false, true, false, false);
 
         foreach ($body->emails as $email) {
             $msg = new AMQPMessage(
