@@ -44,8 +44,11 @@ class AuthController
         $server->handleAuthorizeRequest($request, $response, true, $client['client_id']);
 
         $code = substr($response->getHttpHeader('Location'), strpos($response->getHttpHeader('Location'), 'code='));
+        parse_str($code, $parsedString);
+
         echo json_encode([
-            "authorization_code" => $code
+            "authorization_code" => $parsedString['code'],
+            "state" => $parsedString['state']
         ]);
     }
 
